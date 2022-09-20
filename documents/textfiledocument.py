@@ -15,7 +15,8 @@ class TextFileDocument(Document):
 
     # returns TextIOWrapper
     def get_content(self) -> Iterable[str]:
-        return open(self.path)
+        with open(self.path) as file:
+            return file.readlines()
 
     @staticmethod
     def load_from(abs_path : Path, doc_id : int) -> 'TextFileDocument' :

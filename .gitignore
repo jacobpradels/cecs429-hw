@@ -1,3 +1,5 @@
-*.txt
 nps_sites/*
 test_nps/*
+__pycache__/
+.pyc
+*.pyc
