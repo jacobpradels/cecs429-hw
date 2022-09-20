@@ -17,8 +17,8 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     return(inverted_index)
 def main():
     # corpus_path = Path()
-    # corpus_path = Path("./nps_sites")
-    corpus_path = Path("./test_nps")
+    corpus_path = Path("./nps_sites")
+    # corpus_path = Path("./test_nps")
     # d = DirectoryCorpus.load_text_directory(corpus_path, ".txt")
     d = DirectoryCorpus.load_json_directory(corpus_path, ".json")
 

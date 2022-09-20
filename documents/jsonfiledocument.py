@@ -16,7 +16,7 @@ class JsonFileDocument(Document):
             return data["title"]
 
     def get_content(self) -> Iterable[str]:
-        with open(self.path, encoding="utf-8") as file:
+        with open(self.path, 'r', encoding="utf-8") as file:
             data = json.load(file)
             return StringIO(data["body"])
 

@@ -9,13 +9,11 @@ class InvertedIndex(Index):
         self._index={}
     
     def addTerm(self, term : str, doc_id : int):
-        if term not in self._index:
-            self._index[term] = [doc_id]
-            return
-        if (self._index[term][-1] == doc_id):
-            pass
-        else:
-            self._index[term].append(doc_id)
+        try:
+            if (self._index[term][-1].doc_id != doc_id):
+                self._index[term].append(Posting(doc_id))
+        except KeyError:
+            self._index[term] = [Posting(doc_id)]
 
     def vocabulary(self) -> Iterable[str]:
         vocabulary = list(self._index.keys())
@@ -23,4 +21,4 @@ class InvertedIndex(Index):
         return vocabulary
 
     def get_postings(self, term : str):
-        return [Posting(p) for p in self._index[term]]
+        return self._index[term]
