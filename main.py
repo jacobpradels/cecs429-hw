@@ -12,8 +12,8 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
 
     for d in corpus:
         processor = englishtokenstream.EnglishTokenStream(d.get_content())
-        for term in processor:
-            inverted_index.addTerm(token_processor.process_token(term[0]),d.id, term[1])
+        for position,term in enumerate(processor):
+            inverted_index.addTerm(token_processor.process_token(term),d.id, position)
 
     return(inverted_index)
 def main():
