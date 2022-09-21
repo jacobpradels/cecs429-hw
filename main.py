@@ -3,17 +3,19 @@ from pathlib import Path
 from documents import DocumentCorpus, DirectoryCorpus, jsonfiledocument
 from indexing import Index, TermDocumentIndex
 from text import BasicTokenProcessor, englishtokenstream
+from text import bettertokenprocessor
 from indexing.invertedindex import InvertedIndex
 from indexing.positionalinvertedindex import PositionalInvertedIndex
 
 def index_corpus(corpus : DocumentCorpus) -> Index:
-    token_processor = BasicTokenProcessor()
+    token_processor = bettertokenprocessor.BetterTokenProcessor()
     inverted_index = PositionalInvertedIndex()
 
     for d in corpus:
         processor = englishtokenstream.EnglishTokenStream(d.get_content())
         for position,term in enumerate(processor):
-            inverted_index.addTerm(token_processor.process_token(term),d.id, position)
+            for processed_term in token_processor.process_token(term):
+                inverted_index.addTerm(processed_term,d.id, position)
 
     return(inverted_index)
 def main():
@@ -26,7 +28,7 @@ def main():
 
     # We aren't ready to use a full query parser;
     # for now, we'll only support single-term queries.
-    query = "national" # hard-coded search for "whale"
+    query = "learn" # hard-coded search for "whale"
     for p in index.get_postings(query):
         # doc = d.get_document(p.doc_id)
         print(p.doc_id,end="->[")
