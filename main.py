@@ -6,6 +6,7 @@ from text import BasicTokenProcessor, englishtokenstream
 from text import bettertokenprocessor
 from indexing.invertedindex import InvertedIndex
 from indexing.positionalinvertedindex import PositionalInvertedIndex
+from queries import *
 
 def index_corpus(corpus : DocumentCorpus) -> Index:
     token_processor = bettertokenprocessor.BetterTokenProcessor()
@@ -26,13 +27,11 @@ def main():
     # Build the index over this directory.
     index = index_corpus(d)
 
-    # We aren't ready to use a full query parser;
-    # for now, we'll only support single-term queries.
-    query = "learn" # hard-coded search for "whale"
-    for p in index.get_postings(query):
-        # doc = d.get_document(p.doc_id)
-        print(p.doc_id,end="->[")
-        for pos in p.positions:
-            print(pos,end=",")
-        print("]")
+    query = QueryComponent() # hard-coded search for "whale"
+    # for p in index.get_postings(query):
+    #     # doc = d.get_document(p.doc_id)
+    #     print(p.doc_id,end="->[")
+    #     for pos in p.positions:
+    #         print(pos,end=",")
+    #     print("]")
 main()

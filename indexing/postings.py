@@ -11,3 +11,6 @@ class Posting:
         if not isinstance(other, Posting):
             return NotImplemented
         return self.doc_id == other.doc_id
+
+    def __str__(self):
+        return f"({self.doc_id} : {self.positions})"
