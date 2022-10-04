@@ -1,9 +1,10 @@
 from configparser import BasicInterpolation
+from lib2to3.pgen2 import token
 from pathlib import Path
 from documents import DocumentCorpus, DirectoryCorpus, jsonfiledocument
 from indexing import Index, TermDocumentIndex
 from text import BasicTokenProcessor, englishtokenstream
-from text import bettertokenprocessor
+from text.bettertokenprocessor import BetterTokenProcessor
 from indexing.invertedindex import InvertedIndex
 from indexing.positionalinvertedindex import PositionalInvertedIndex
 from queries import *
@@ -12,7 +13,7 @@ import time
 
 
 def index_corpus(corpus : DocumentCorpus) -> Index:
-    token_processor = bettertokenprocessor.BetterTokenProcessor()
+    token_processor = BetterTokenProcessor()
     inverted_index = PositionalInvertedIndex()
     print("Indexing...")
     for d in corpus:
@@ -44,13 +45,17 @@ def main():
     query_string = ""
 
     while (query_string != ":q"):
+        # Get input
         query_string = input("> ")
 
+        # Close program
         if (query_string == ":q"):
-            return
+            break
+        # Run stemmer
         elif (query_string[0:5] == ":stem"):
-            
             print(stemmer.stem(query_string[6:]))
+        
+        # Index new corpus
         elif (query_string[0:6] == ":index"):
             corpus_path = query_string[7:]
             d = DirectoryCorpus.load_json_directory(corpus_path, ".json")
@@ -60,12 +65,17 @@ def main():
             index = index_corpus(d)
             end = time.time()
             print("Time to index = {:.2f} seconds".format(end-start))
+        
+        # Display vocabulary
         elif (query_string == ":vocab"):
             for word in index.vocabulary()[:1001]:
                 print(word)
             print(f"Vocabulary has {len(index.vocabulary())} words")
+        
+        # Parse query
         else:
-            query = booleanqueryparser.parse_query(query_string)
+            token_processor = BetterTokenProcessor()
+            query = booleanqueryparser.parse_query(query_string, token_processor)
             postings = query.get_postings(index)
             for post in postings:
                 document = d.get_document(post.doc_id)

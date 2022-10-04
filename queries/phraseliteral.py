@@ -1,5 +1,5 @@
 from indexing.postings import Posting
-from text.bettertokenprocessor import BetterTokenProcessor
+from text import TokenProcessor
 from .querycomponent import QueryComponent
 
 class PhraseLiteral(QueryComponent):
@@ -7,9 +7,9 @@ class PhraseLiteral(QueryComponent):
     Represents a phrase literal consisting of one or more terms that must occur in sequence.
     """
 
-    def __init__(self, terms : list[str]):
-        token_processor = BetterTokenProcessor()
-        self.terms = [token_processor.process_token_keep_hyphen(s) for s in terms]
+    def __init__(self, terms : list[str], processor : TokenProcessor):
+        self.processor = processor
+        self.terms = [self.processor.process_token_keep_hyphen(s) for s in terms]
 
     def get_postings(self, index) -> list[Posting]:
         

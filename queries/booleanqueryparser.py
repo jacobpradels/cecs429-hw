@@ -1,5 +1,5 @@
 from . import AndQuery, OrQuery, QueryComponent, TermLiteral, PhraseLiteral
-
+from text import TokenProcessor
 class BooleanQueryParser:
     class _StringBounds:
         """A wrapper class for identifying a range within a string."""
@@ -49,7 +49,7 @@ class BooleanQueryParser:
         return BooleanQueryParser._StringBounds(start_index, length_out) 
 			
     @staticmethod
-    def _find_next_literal(subquery : str, start_index : int) -> 'BooleanQueryParser._Literal':
+    def _find_next_literal(subquery : str, start_index : int, processor : TokenProcessor) -> 'BooleanQueryParser._Literal':
         """
         Locates and returns the next literal from the given subquery string.
         """
@@ -74,14 +74,14 @@ class BooleanQueryParser:
                 length_out = (end_string + 2) - start_index
                 return BooleanQueryParser._Literal(
                     BooleanQueryParser._StringBounds(start_index, length_out),
-                    PhraseLiteral(subquery[start_index + 1:start_index + length_out + 1].split(" "))
+                    PhraseLiteral(subquery[start_index + 1:start_index + length_out + 1].split(" "), processor)
                 )
             else:
                 length_out = next_space - start_index        
         # This is a term literal containing a single term.
         return BooleanQueryParser._Literal(
             BooleanQueryParser._StringBounds(start_index, length_out),
-            TermLiteral(subquery[start_index:start_index + length_out])
+            TermLiteral(subquery[start_index:start_index + length_out], processor)
         )
 
         # TODO:
@@ -89,7 +89,7 @@ class BooleanQueryParser:
 		# object if the first non-space character you find is a double-quote ("). In this case, the literal is not ended
 		# by the next space character, but by the next double-quote character.
         
-    def parse_query(self, query : str) -> QueryComponent:
+    def parse_query(self, query : str, processor) -> QueryComponent:
         """
         Given a boolean query, parses and returns a tree of QueryComponents representing the query.
         """
@@ -114,7 +114,7 @@ class BooleanQueryParser:
 
             while sub_start < len(subquery):
                 # Extract the next literal from the subquery.
-                lit = BooleanQueryParser._find_next_literal(subquery, sub_start)
+                lit = BooleanQueryParser._find_next_literal(subquery, sub_start, processor)
 
                 # Add the literal component to the conjunctive list.
                 subquery_literals.append(lit.literal_component)

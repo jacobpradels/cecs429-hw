@@ -24,7 +24,7 @@ class QueryOutputTests(unittest.TestCase):
     def test_or_query(self):
         # ARRANGE
         query_string = "apple + mango"
-        query = self.boolqueryparser.parse_query(query_string)
+        query = self.boolqueryparser.parse_query(query_string,self.token_processor)
         expected_postings = [Posting(1,[2,3,4]),Posting(2,[1]),Posting(3,0)]
         # ACT
         test_postings = query.get_postings(self.inverted_index)
@@ -35,7 +35,7 @@ class QueryOutputTests(unittest.TestCase):
     def test_and_query(self):
         # ARRANGE
         query_string = "apple mango"
-        query = self.boolqueryparser.parse_query(query_string)
+        query = self.boolqueryparser.parse_query(query_string, self.token_processor)
         expected_postings = [Posting(1,[2,3])]
         # ACT
         test_postings = query.get_postings(self.inverted_index)
@@ -46,7 +46,7 @@ class QueryOutputTests(unittest.TestCase):
     def test_phrase_query(self):
         # ARRANGE
         query_string = "\"apple mango\""
-        query = self.boolqueryparser.parse_query(query_string)
+        query = self.boolqueryparser.parse_query(query_string, self.token_processor)
         expected_postings = [Posting(1,3)]
         # ACT
         test_postings = query.get_postings(self.inverted_index)

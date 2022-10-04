@@ -1,15 +1,15 @@
 from indexing.postings import Posting
 from .querycomponent import QueryComponent
-from text.bettertokenprocessor import BetterTokenProcessor
+from text import TokenProcessor
 
 class TermLiteral(QueryComponent):
     """
     A TermLiteral represents a single term in a subquery.
     """
 
-    def __init__(self, term : str):
-        token_processor = BetterTokenProcessor()
-        self.term = token_processor.process_token_keep_hyphen(term)
+    def __init__(self, term : str, processor : TokenProcessor):
+        self.processor = processor
+        self.term = self.processor.process_token_keep_hyphen(term)
 
     def get_postings(self, index) -> list[Posting]:
         return index.get_postings(self.term)
