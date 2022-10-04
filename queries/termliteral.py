@@ -1,5 +1,6 @@
 from indexing.postings import Posting
 from .querycomponent import QueryComponent
+from text.bettertokenprocessor import BetterTokenProcessor
 
 class TermLiteral(QueryComponent):
     """
@@ -7,7 +8,8 @@ class TermLiteral(QueryComponent):
     """
 
     def __init__(self, term : str):
-        self.term = term
+        token_processor = BetterTokenProcessor()
+        self.term = token_processor.process_token_keep_hyphen(term)
 
     def get_postings(self, index) -> list[Posting]:
         return index.get_postings(self.term)

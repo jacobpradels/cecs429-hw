@@ -14,7 +14,7 @@ class OrQuery(QueryComponent):
 		# merging the resulting postings.
         for component in self.components:
             new_result = []
-            postings = component.get_postings()
+            postings = component.get_postings(index)
             first = 0
             second = 0
             while first < len(result) and second < len(postings):
