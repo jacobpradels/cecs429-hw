@@ -16,8 +16,8 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     inverted_index = PositionalInvertedIndex()
     print("Indexing...")
     for d in corpus:
-        processor = englishtokenstream.EnglishTokenStream(d.get_content())
-        for position,term in enumerate(processor):
+        stream = englishtokenstream.EnglishTokenStream(d.get_content())
+        for position,term in enumerate(stream):
             for processed_term in token_processor.process_token(term):
                 inverted_index.addTerm(processed_term,d.id, position)
     print("Done")
@@ -32,7 +32,8 @@ def main():
     corpus = input("Enter corpus path: ")
     corpus_path = Path(corpus)
     d = DirectoryCorpus.load_json_directory(corpus_path, ".json")
-
+    if (len(d.documents()) == 0):
+        d = DirectoryCorpus.load_text_directory(corpus_path, ".txt")
     # Build the index over this directory, recording time taken.
     start = time.time()
     index = index_corpus(d)
@@ -51,12 +52,18 @@ def main():
             
             print(stemmer.stem(query_string[6:]))
         elif (query_string[0:6] == ":index"):
-            corpus = query_string[7:]
+            corpus_path = query_string[7:]
             d = DirectoryCorpus.load_json_directory(corpus_path, ".json")
+            if (len(d.documents()) == 0):
+                d = DirectoryCorpus.load_text_directory(corpus_path, ".txt")
             start = time.time()
             index = index_corpus(d)
             end = time.time()
             print("Time to index = {:.2f} seconds".format(end-start))
+        elif (query_string == ":vocab"):
+            for word in index.vocabulary()[:1001]:
+                print(word)
+            print(f"Vocabulary has {len(index.vocabulary())} words")
         else:
             query = booleanqueryparser.parse_query(query_string)
             postings = query.get_postings(index)

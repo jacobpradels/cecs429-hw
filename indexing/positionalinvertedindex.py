@@ -30,3 +30,8 @@ class PositionalInvertedIndex(Index):
 
     def get_postings(self, term : str):
         return self._index[term]
+    
+    def __eq__(self,other):
+        if not isinstance(other, PositionalInvertedIndex):
+            return NotImplemented
+        return self._index == other._index
