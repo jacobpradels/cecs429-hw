@@ -47,3 +47,10 @@ class BetterTokenProcessor(TokenProcessor):
         # 5. Stem the token using an implementation of Porter2 stemmer
         out_list = [self.stemmer.stem(token) for token in out_list]
         return out_list
+    
+    def process_token_keep_hyphen(self, token : str) -> str:
+        out = self.strip_non_alphanum(token)
+        out = self.strip_quotes(out)
+        out = out.lower()
+        out = self.stemmer.stem(out)
+        return out
