@@ -72,7 +72,6 @@ class BooleanQueryParser:
                     end_string += 1
                 # +2 accounts for the enclosing quotes
                 length_out = (end_string + 2) - start_index
-                print('infinity!')
                 return BooleanQueryParser._Literal(
                     BooleanQueryParser._StringBounds(start_index, length_out),
                     PhraseLiteral(subquery[start_index + 1:start_index + length_out + 1].split(" "))
