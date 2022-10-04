@@ -31,7 +31,8 @@ class PhraseLiteral(QueryComponent):
                     second += 1
                 elif d1 == d2:
                     merged_positions = merge_positions(postings1[first].positions,postings2[second].positions,offset)
-                    new_result.append(Posting(d1,merged_positions))
+                    if (len(merged_positions) > 0):
+                        new_result.append(Posting(d1,merged_positions))
                     first += 1
                     second += 1
             offset += 1
