@@ -1,6 +1,8 @@
+from operator import index
 import unittest.main
 from unittest.mock import MagicMock
 from indexing import Posting
+from indexing.DiskIndexWriter import DiskIndexWriter
 from indexing.positionalinvertedindex import PositionalInvertedIndex
 from documents import DirectoryCorpus
 from text.englishtokenstream import EnglishTokenStream
@@ -53,5 +55,22 @@ class PositionalInvertedIndexTests(unittest.TestCase):
         expected_vocabulary = expected_index.vocabulary()
         test_vocabulary = inverted_index.vocabulary()
         self.assertEqual(expected_vocabulary,test_vocabulary)
+    
+    def test_disk_write_index(self):
+        d = DirectoryCorpus.load_text_directory(Path("tests/test_corpus"),".txt")
+        inverted_index = PositionalInvertedIndex()
+
+        expected_index = PositionalInvertedIndex()
+        expected_index._index = self.expected_index
+
+        # ACT
+        for document in d:
+            processor = EnglishTokenStream(document.get_content())
+            for position,term in enumerate(processor):
+                inverted_index.addTerm(term, document.id, position)
+        
+        index_writer = DiskIndexWriter()
+        index_writer.writeIndex(inverted_index,Path("./postings.bin"))
+        
         
 unittest.main()
