@@ -29,14 +29,15 @@ class DiskIndexWriter:
             for term in vocab:
                 # Insert into database term and hex location in index
                 cur.execute("INSERT INTO term VALUES (?,?)",[term,hex(self.byte_position)])
-
+                con.commit()
+                
                 # Get postings for that term
                 postings_list = index.get_postings(term)
-                print(f"----------{term}----------")
+                # print(f"----------{term}----------")
                 # dft = # of documents containing term
                 dft=len(postings_list)
                 self.write(file,dft)
-                print(f"dft={dft}")
+                # print(f"dft={dft}")
 
                 # Track id and prev_id for gap
                 id = 0
@@ -49,12 +50,12 @@ class DiskIndexWriter:
 
                     # Id = gapped document id
                     self.write(file,id)
-                    print(f"id={id}")
+                    # print(f"id={id}")
 
                     # tftd = # of times term occurs in document
                     tftd = len(posting.positions)
                     self.write(file,tftd)
-                    print(f"tftd={tftd}")
+                    # print(f"tftd={tftd}")
 
                     pos = 0
                     prev_pos = 0
@@ -63,10 +64,10 @@ class DiskIndexWriter:
                         gap_pos = pi - prev_pos
                         prev_pos = pi
                         self.write(file,gap_pos)
-                        print(f"pi={gap_pos}")
+                        # print(f"pi={gap_pos}")
 
 
-                    print(posting)
+                    # print(posting)
         # This is just here for debugging output
-        res = cur.execute("SELECT key,byte FROM term")
-        print(res.fetchall())
+        # res = cur.execute("SELECT key,byte FROM term")
+        # print(res.fetchall())

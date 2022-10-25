@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from indexing import Posting
 from indexing.DiskIndexWriter import DiskIndexWriter
 from indexing.positionalinvertedindex import PositionalInvertedIndex
+from indexing.DiskPositionalIndex import DiskPositionalIndex
 from documents import DirectoryCorpus
 from text.englishtokenstream import EnglishTokenStream
 from pathlib import Path
@@ -44,6 +45,8 @@ class PositionalInvertedIndexTests(unittest.TestCase):
         # Test that postings for apple are the same
         expected_postings = expected_index.get_postings('apple')
         test_postings = inverted_index.get_postings('apple')
+        for p in test_postings:
+            print(p)
         self.assertEqual(expected_postings,test_postings)
 
         # Test that postings for strawberry are the same
@@ -71,6 +74,12 @@ class PositionalInvertedIndexTests(unittest.TestCase):
         
         index_writer = DiskIndexWriter()
         index_writer.writeIndex(inverted_index,Path("./postings.bin"))
+    
+    def test_disk_read_index(self):
+        index = DiskPositionalIndex()
+        test_postings = index.get_postings("apple")
+        for p in test_postings:
+            print(p)
         
         
 unittest.main()
