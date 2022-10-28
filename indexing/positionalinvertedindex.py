@@ -28,8 +28,14 @@ class PositionalInvertedIndex(Index):
         vocabulary.sort()
         return vocabulary
 
-    def get_postings(self, term : str):
+    def get_postings(self, term : str) -> Iterable[Posting]:
         return self._index[term]
+    
+    def get_postings_no_pos(self, term: str) -> Iterable[Posting]:
+        postings = self._index[term]
+        tftd = len(postings)
+        postings = [Posting(x.doc_id,tftd=tftd) for x in postings]
+        return postings
     
     def __eq__(self,other):
         if not isinstance(other, PositionalInvertedIndex):

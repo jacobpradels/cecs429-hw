@@ -3,8 +3,9 @@ from typing import Type
 
 class Posting:
     """A Posting encapulates a document ID associated with a search query component."""
-    def __init__(self, doc_id : int, position):
+    def __init__(self, doc_id : int, position=-1, tftd=None):
         self.doc_id = doc_id
+        self.tftd = tftd
         if isinstance(position,int):
             self.positions = [position]
         elif isinstance(position,list):
@@ -21,4 +22,7 @@ class Posting:
         return self.doc_id == other.doc_id and self.positions == other.positions
 
     def __str__(self):
-        return f"({self.doc_id} : {self.positions})"
+        if (self.positions != [-1]):
+            return f"({self.doc_id} : {self.positions})"
+        else:
+            return f"({self.doc_id} : tftd: {self.tftd})"

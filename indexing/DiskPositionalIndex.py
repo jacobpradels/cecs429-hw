@@ -7,32 +7,57 @@ from .postings import Posting
 
 class DiskPositionalIndex(Index):
     
+    ########## HELPER FUNCTIONS ##########
+
+    def read_next(self, postings, offset):
+        """ Reads byte in postings file and advances offset variable """
+        value = struct.unpack(">i",postings[offset:offset+4])[0]
+        offset = offset + 4
+        return value,offset
+    
+    def skip(self, n : int, offset : int):
+        """
+        Skips the offset tracker n 4 byte ints in postings.bin file
+        """
+        offset = offset + 4 * n
+        return offset 
+
     def get_document(self, postings, offset):
         """
         Helper function for reading document postings on disk.
         Returns a tuple of form ({doc_id:List[Positions]},updated_offset)
         """
         positions = []
-        doc_id = struct.unpack(">i",postings[offset:offset+4])[0]
-        offset += 4
-        tftd = struct.unpack(">i", postings[offset:offset+4])[0]
-        offset += 4
+        doc_id,offset = self.read_next(postings, offset)
+        tftd,offset = self.read_next(postings,offset)
         for x in range(tftd):
-            next_gapped = struct.unpack(">i",postings[offset:offset+4])[0]
+            next_gapped,offset = self.read_next(postings,offset)
             if positions:
                 positions.append(next_gapped + positions[-1])
             else:
                 positions.append(next_gapped)
-            offset = offset+4
 
         return ((doc_id,positions),offset)
+    
+    def get_document_no_pos(self, postings, offset):
+        """
+        Helper function for reading document postings on disk
+        without positions.
+        Returns a tuple of form (doc_id,updated_offset)
+        """
+        doc_id,offset = self.read_next(postings,offset)
+        tftd,offset = self.read_next(postings,offset)
+        offset = self.skip(tftd,offset)
 
-    # dft - number of documents containing term
-    # id - document id
-    # tftd - number of times term appears in document
-    # pi - position i in document
-    def get_postings(self, term : str) -> Iterable[Posting]:
-        final_postings = []
+        return (doc_id,offset,tftd)
+    
+
+    
+    def get_term_position(self, term):
+        """
+        Get the position a term starts in postings.bin from the
+        term_positions database.
+        """
         # Connect to the database
         con = sqlite3.connect("term_positions.db")
         cur = con.cursor()
@@ -41,15 +66,25 @@ class DiskPositionalIndex(Index):
         position = res.fetchone()[1]
         # Convert position to decimal
         position = int(position[2:],16)
+        return position
+
+
+
+    ########## INHERITED FUNCTIONS ##########
+
+    # dft - number of documents containing term
+    # id - document id
+    # tftd - number of times term appears in document
+    # pi - position i in document
+    def get_postings(self, term : str) -> Iterable[Posting]:
+        final_postings = []
+        position = self.get_term_position(term)
 
         # Open postings.bin
         with open("postings.bin","rb") as postings_file:
             postings = postings_file.read()
-            # Find how many documents to cover
-            dft = struct.unpack(">i",postings[position:position+4])[0]
-            # Increment position because we read that byte
-            position = position + 4
-            
+            # Find how many documents to cover and update position
+            dft,position = self.read_next(postings, position)
             # Used to remove gap
             last_document = 0
             for document in range(dft):
@@ -64,9 +99,37 @@ class DiskPositionalIndex(Index):
                 final_postings.append(Posting(doc_id + last_document,term_positions))
                 last_document = doc_id + last_document
         return final_postings
-            
+    
+    def get_postings_no_pos(self, term: str) -> Iterable[Posting]:
+        final_postings = []
+        position = self.get_term_position(term)
+
+        # Open postings.bin
+        with open("postings.bin","rb") as postings_file:
+            postings = postings_file.read()
+            # Find how many documents to cover
+            dft,position = self.read_next(postings, position)
+
+            # Used to remove gap
+            last_document = 0
+            for document in range(dft):
+                # Use helper function to get all positions in document
+                doc_info = self.get_document_no_pos(postings, position)
+                # Update the position for reading next int
+                position = doc_info[1]
+                # Process and add to dictionary
+                doc_id = doc_info[0]
+                final_postings.append(Posting(doc_id + last_document,tftd=doc_info[2]))
+                last_document = doc_id + last_document
+        return final_postings
             
 
 
     def vocabulary(self) -> list[str]:
-        pass
+        # Connect to the database
+        con = sqlite3.connect("term_positions.db")
+        cur = con.cursor()
+        # Query database for location of term in postings.bin
+        res = cur.execute("SELECT key FROM term")
+        vocab = [x[0] for x in res]
+        return vocab
