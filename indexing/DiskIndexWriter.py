@@ -21,6 +21,7 @@ class DiskIndexWriter:
         con = sqlite3.connect("term_positions.db")
         cur = con.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS term(key text, byte text)")
+        cur.execute("DELETE FROM term")
         con.commit()
 
         # Write to file

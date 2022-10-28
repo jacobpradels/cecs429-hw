@@ -58,6 +58,10 @@ class PositionalInvertedIndexTests(unittest.TestCase):
         expected_vocabulary = expected_index.vocabulary()
         test_vocabulary = inverted_index.vocabulary()
         self.assertEqual(expected_vocabulary,test_vocabulary)
+
+        # Test that index can return list without postings
+        expected_vocabulary = expected_index.get_postings_no_pos('strawberry')
+        test_vocabulary = inverted_index.get_postings_no_pos('strawberry')
     
     def test_disk_write_index(self):
         d = DirectoryCorpus.load_text_directory(Path("tests/test_corpus"),".txt")
@@ -77,7 +81,10 @@ class PositionalInvertedIndexTests(unittest.TestCase):
     
     def test_disk_read_index(self):
         index = DiskPositionalIndex()
-        test_postings = index.get_postings("apple")
+        test_postings = index.get_postings_no_pos("apple")
+        vocab = index.vocabulary()
+        print(vocab)
+
         for p in test_postings:
             print(p)
         
