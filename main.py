@@ -1,6 +1,8 @@
 from configparser import BasicInterpolation
 from lib2to3.pgen2 import token
+import math
 from pathlib import Path
+import struct
 from documents import DocumentCorpus, DirectoryCorpus, jsonfiledocument
 from indexing import Index, TermDocumentIndex
 from text import BasicTokenProcessor, englishtokenstream
@@ -16,11 +18,22 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     token_processor = BetterTokenProcessor()
     inverted_index = PositionalInvertedIndex()
     print("Indexing...")
-    for d in corpus:
-        stream = englishtokenstream.EnglishTokenStream(d.get_content())
-        for position,term in enumerate(stream):
-            for processed_term in token_processor.process_token(term):
-                inverted_index.addTerm(processed_term,d.id, position)
+    with open("doc_Weights.bin","wb") as file:
+        for d in corpus:
+            stream = englishtokenstream.EnglishTokenStream(d.get_content())
+            term_count = {}
+            for position,term in enumerate(stream):
+                try:
+                    term_count[term] += 1
+                except KeyError:
+                    term_count[term] = 1
+                for processed_term in token_processor.process_token(term):
+                    inverted_index.addTerm(processed_term,d.id, position)
+            total = 0
+            for key,val in term_count.items():
+                total += 1 + math.log(val)**2
+            Ld = math.sqrt(total)
+            file.write(struct.pack('>d',Ld))
     print("Done")
     print(f"Found {len(corpus)} documents")
 
