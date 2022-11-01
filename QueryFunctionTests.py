@@ -1,16 +1,19 @@
 import unittest.main
 from unittest.mock import MagicMock
+
+from kiwisolver import Term
 from queries import *
 from indexing import Posting
 from queries import orquery
 from porter2stemmer import Porter2Stemmer
+from queries.RankedRetrievalParser import RankedRetrievalParser
 from text.bettertokenprocessor import BetterTokenProcessor
 
 
 class BooleanQueryParserTests(unittest.TestCase):
     processor = BetterTokenProcessor()
     def test_term_literal(self):
-        expected_output = BooleanQueryParser._Literal(BooleanQueryParser._StringBounds(0,4),TermLiteral("dog_asdf"))
+        expected_output = BooleanQueryParser._Literal(BooleanQueryParser._StringBounds(0,4),TermLiteral("dog_asdf",self.processor))
         test_output = BooleanQueryParser._find_next_literal("   dog_asdf",0,self.processor)
         self.assertEqual(test_output.literal_component,expected_output.literal_component)
 
@@ -74,7 +77,7 @@ class OrQueryTests(unittest.TestCase):
         mock_index.get_postings = MagicMock(side_effect=test_andquery_get_postings_helper)
         components = [TermLiteral("jacob",self.processor),TermLiteral("Hello",self.processor)]
 
-        posting_1 = Posting(1,15)
+        posting_1 = Posting(1,[9,15,22,111])
         posting_2 = Posting(2,[17,32])
 
         expected_postings = [posting_1,posting_2]    
@@ -112,6 +115,17 @@ class OrQueryTests(unittest.TestCase):
         # print("".join(map(str,test_postings)))
         # ASSERT
         self.assertEqual(expected_postings,test_postings)
+
+
+class RankedQueryParserTests(unittest.TestCase):
+    def test_parse_query(self):
+        processor = BetterTokenProcessor()
+        parser = RankedRetrievalParser()
+        in_string = "test parser"
+        expected = [TermLiteral("test",processor),TermLiteral("parser",processor)]
+        test = parser.parse_query(in_string,processor)
+        [print(term) for term in test]
+        self.assertEqual(expected,test)
     
     
 
