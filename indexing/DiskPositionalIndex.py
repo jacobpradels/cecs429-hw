@@ -1,4 +1,4 @@
-from bdb import GENERATOR_AND_COROUTINE_FLAGS
+# from bdb import GENERATOR_AND_COROUTINE_FLAGS
 import sqlite3
 import struct
 from .index import Index
@@ -7,6 +7,8 @@ from .postings import Posting
 
 class DiskPositionalIndex(Index):
     
+    def __init__(self, processor):
+        self.processor = processor
     ########## HELPER FUNCTIONS ##########
 
     def read_next(self, postings, offset):
@@ -58,6 +60,7 @@ class DiskPositionalIndex(Index):
         Get the position a term starts in postings.bin from the
         term_positions database.
         """
+        term = self.processor.process_token_keep_hyphen(term)
         # Connect to the database
         con = sqlite3.connect("term_positions.db")
         cur = con.cursor()
@@ -68,7 +71,12 @@ class DiskPositionalIndex(Index):
         position = int(position[2:],16)
         return position
 
-
+    def get_doc_weight(self, doc_id):
+        with open("doc_Weights.bin","rb") as weights_file:
+            weights = weights_file.read()
+            position = (doc_id) * 8
+            value = struct.unpack(">d",weights[position:position+8])[0]
+            return value
 
     ########## INHERITED FUNCTIONS ##########
 
@@ -132,4 +140,5 @@ class DiskPositionalIndex(Index):
         # Query database for location of term in postings.bin
         res = cur.execute("SELECT key FROM term")
         vocab = [x[0] for x in res]
+        print('vocab len',len(vocab))
         return vocab

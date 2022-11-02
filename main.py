@@ -9,6 +9,8 @@ from text import BasicTokenProcessor, englishtokenstream
 from text.bettertokenprocessor import BetterTokenProcessor
 from indexing.invertedindex import InvertedIndex
 from indexing.positionalinvertedindex import PositionalInvertedIndex
+from indexing.DiskIndexWriter import DiskIndexWriter
+from indexing.DiskPositionalIndex import DiskPositionalIndex
 from queries import *
 from porter2stemmer import Porter2Stemmer
 import time
@@ -23,20 +25,22 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
             stream = englishtokenstream.EnglishTokenStream(d.get_content())
             term_count = {}
             for position,term in enumerate(stream):
-                try:
-                    term_count[term] += 1
-                except KeyError:
-                    term_count[term] = 1
                 for processed_term in token_processor.process_token(term):
                     inverted_index.addTerm(processed_term,d.id, position)
+                    try:
+                        term_count[processed_term] += 1
+                    except KeyError:
+                        term_count[processed_term] = 1
             total = 0
             for key,val in term_count.items():
                 total += 1 + math.log(val)**2
             Ld = math.sqrt(total)
             file.write(struct.pack('>d',Ld))
+    
     print("Done")
     print(f"Found {len(corpus)} documents")
-
+    index_writer = DiskIndexWriter()
+    index_writer.writeIndex(inverted_index,Path("./postings.bin"))
     return(inverted_index)
 
 
