@@ -1,3 +1,4 @@
+import math
 from .index import Index
 from typing import Iterable
 from .postings import Posting
@@ -34,7 +35,8 @@ class PositionalInvertedIndex(Index):
     def get_postings_no_pos(self, term: str) -> Iterable[Posting]:
         postings = self._index[term]
         tftd = len(postings)
-        postings = [Posting(x.doc_id,tftd=tftd) for x in postings]
+        wdt = 1 + math.log(tftd)
+        postings = [Posting(x.doc_id,tftd=tftd,wdt=wdt) for x in postings]
         return postings
     
     def __eq__(self,other):

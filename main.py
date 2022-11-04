@@ -9,6 +9,9 @@ from text import BasicTokenProcessor, englishtokenstream
 from text.bettertokenprocessor import BetterTokenProcessor
 from indexing.invertedindex import InvertedIndex
 from indexing.positionalinvertedindex import PositionalInvertedIndex
+from indexing.DiskIndexWriter import DiskIndexWriter
+from indexing.DiskPositionalIndex import DiskPositionalIndex
+from queries import RankedRetrievalParser
 from queries import *
 from porter2stemmer import Porter2Stemmer
 import time
@@ -20,41 +23,57 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     print("Indexing...")
     with open("doc_Weights.bin","wb") as file:
         for d in corpus:
+            total = 0
             stream = englishtokenstream.EnglishTokenStream(d.get_content())
             term_count = {}
             for position,term in enumerate(stream):
-                try:
-                    term_count[term] += 1
-                except KeyError:
-                    term_count[term] = 1
                 for processed_term in token_processor.process_token(term):
                     inverted_index.addTerm(processed_term,d.id, position)
-            total = 0
+                    try:
+                        term_count[processed_term] += 1
+                    except KeyError:
+                        term_count[processed_term] = 1
             for key,val in term_count.items():
-                total += 1 + math.log(val)**2
+                # print(f'[{key} - {val}]')
+                wdt = 1 + math.log(val)
+                total += (wdt**2)
             Ld = math.sqrt(total)
+            print(f"{d.id} - {Ld}")
             file.write(struct.pack('>d',Ld))
+    
     print("Done")
     print(f"Found {len(corpus)} documents")
-
+    index_writer = DiskIndexWriter()
+    index_writer.writeIndex(inverted_index,Path("./postings.bin"))
     return(inverted_index)
 
 
 
 def main():
     stemmer = Porter2Stemmer()
+    token_processor = BetterTokenProcessor()
+    index = None
     corpus = input("Enter corpus path: ")
     corpus_path = Path(corpus)
+    choice = eval(input("1.Build an index\n2.Query an index\n"))
     d = DirectoryCorpus.load_json_directory(corpus_path, ".json")
     if (len(d.documents()) == 0):
         d = DirectoryCorpus.load_text_directory(corpus_path, ".txt")
-    # Build the index over this directory, recording time taken.
-    start = time.time()
-    index = index_corpus(d)
-    end = time.time()
-    print("Time to index = {:.2f} seconds".format(end-start))
+    N = 0
+    if choice == 1:
+        # Build the index over this directory, recording time taken.
+        start = time.time()
+        index = index_corpus(d)
+        end = time.time()
+        print("Time to index = {:.2f} seconds".format(end-start))
+    else:
+        index = DiskPositionalIndex(token_processor)
 
-    booleanqueryparser = BooleanQueryParser()
+    mode = eval(input("1. Boolean Query Mode\n2. Ranked Retrieval Mode\n"))
+    if mode == 1:
+        queryparser = BooleanQueryParser()
+    elif mode == 2:
+        queryparser = RankedRetrievalParser.RankedRetrievalParser()
     query_string = ""
 
     while (query_string != ":q"):
@@ -87,12 +106,12 @@ def main():
         
         # Parse query
         else:
-            token_processor = BetterTokenProcessor()
-            query = booleanqueryparser.parse_query(query_string, token_processor)
+            
+            query = queryparser.parse_query(query_string, token_processor)
             postings = query.get_postings(index)
             for post in postings:
                 document = d.get_document(post.doc_id)
-                print(document)
+                print(document,post.tftd)
             print(f"{len(postings)} documents")
             chosen_document = eval(input("Enter document id to view (-1 to skip viewing) "))
             if (chosen_document != -1):

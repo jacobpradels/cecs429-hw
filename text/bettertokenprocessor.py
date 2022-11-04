@@ -15,14 +15,26 @@ class BetterTokenProcessor(TokenProcessor):
         split tokens.
     4. Convert the token to lowercase
     5. Stem the token using an implementation of Porter2 stemmer."""
-    whitespace_re = re.compile(r"\W+")
-    not_alphanum_re = re.compile(r"^[^\w]+|([^\w]*$)")
+    # whitespace_re = re.compile(r"\W+")
+    # not_alphanum_re = re.compile(r"^[^\w]+|([^\w]*$)")
 
     stemmer = Porter2Stemmer()
     
     def strip_non_alphanum(self, token : str) -> str:
-        token = re.sub(self.not_alphanum_re,"", token)
-        return token
+        # token = re.sub(self.not_alphanum_re,"", token)
+        # return token
+        start = 0
+        end = len(token) - 1
+        try:
+            while (not token[start].isalnum()):
+                start = start+1
+        except IndexError:
+            #Index error means we walked off end of list
+            return ""
+        while (not token[end].isalnum()):
+            end = end - 1
+        return token[start:end+1]
+
     
     def strip_quotes(self, token : str) -> str:
         token = token.strip("'").strip("\"")

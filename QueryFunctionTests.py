@@ -1,13 +1,13 @@
 import unittest.main
 from unittest.mock import MagicMock
 
-from kiwisolver import Term
 from queries import *
 from indexing import Posting
 from queries import orquery
 from porter2stemmer import Porter2Stemmer
 from queries.RankedRetrievalParser import RankedRetrievalParser
 from text.bettertokenprocessor import BetterTokenProcessor
+from indexing.DiskPositionalIndex import DiskPositionalIndex
 
 
 class BooleanQueryParserTests(unittest.TestCase):
@@ -118,16 +118,14 @@ class OrQueryTests(unittest.TestCase):
 
 
 class RankedQueryParserTests(unittest.TestCase):
+    processor = BetterTokenProcessor()
+    parser = RankedRetrievalParser()
     def test_parse_query(self):
-        processor = BetterTokenProcessor()
-        parser = RankedRetrievalParser()
-        in_string = "test parser"
-        expected = [TermLiteral("test",processor),TermLiteral("parser",processor)]
-        test = parser.parse_query(in_string,processor)
-        [print(term) for term in test]
-        self.assertEqual(expected,test)
-    
-    
+        index = DiskPositionalIndex(self.processor)
+        corpus_size = 36803
+        in_string = "whiskeytown"
+        test = self.parser.parse_query(in_string,self.processor, corpus_size)
+        test.get_postings(index)    
 
 unittest.main()
 

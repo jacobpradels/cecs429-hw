@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 import struct
 from indexing.positionalinvertedindex import PositionalInvertedIndex
@@ -30,7 +31,6 @@ class DiskIndexWriter:
             for term in vocab:
                 # Insert into database term and hex location in index
                 cur.execute("INSERT INTO term VALUES (?,?)",[term,hex(self.byte_position)])
-                con.commit()
                 
                 # Get postings for that term
                 postings_list = index.get_postings(term)
@@ -39,6 +39,7 @@ class DiskIndexWriter:
                 dft=len(postings_list)
                 self.write(file,dft)
                 # print(f"dft={dft}")
+                
 
                 # Track id and prev_id for gap
                 id = 0
@@ -55,6 +56,9 @@ class DiskIndexWriter:
 
                     # tftd = # of times term occurs in document
                     tftd = len(posting.positions)
+                    wdt = 1 + math.log(tftd)
+                    file.write(struct.pack('>d',wdt))
+                    self.byte_position += 8
                     self.write(file,tftd)
                     # print(f"tftd={tftd}")
 
@@ -67,7 +71,7 @@ class DiskIndexWriter:
                         self.write(file,gap_pos)
                         # print(f"pi={gap_pos}")
 
-
+        con.commit()
                     # print(posting)
         # This is just here for debugging output
         # res = cur.execute("SELECT key,byte FROM term")

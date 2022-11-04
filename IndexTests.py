@@ -63,30 +63,30 @@ class PositionalInvertedIndexTests(unittest.TestCase):
         expected_vocabulary = expected_index.get_postings_no_pos('strawberry')
         test_vocabulary = inverted_index.get_postings_no_pos('strawberry')
     
-    def test_disk_write_index(self):
-        d = DirectoryCorpus.load_text_directory(Path("tests/test_corpus"),".txt")
-        inverted_index = PositionalInvertedIndex()
+    # def test_disk_write_index(self):
+    #     d = DirectoryCorpus.load_text_directory(Path("tests/test_corpus"),".txt")
+    #     inverted_index = PositionalInvertedIndex()
 
-        expected_index = PositionalInvertedIndex()
-        expected_index._index = self.expected_index
+    #     expected_index = PositionalInvertedIndex()
+    #     expected_index._index = self.expected_index
 
-        # ACT
-        for document in d:
-            processor = EnglishTokenStream(document.get_content())
-            for position,term in enumerate(processor):
-                inverted_index.addTerm(term, document.id, position)
+    #     # ACT
+    #     for document in d:
+    #         processor = EnglishTokenStream(document.get_content())
+    #         for position,term in enumerate(processor):
+    #             inverted_index.addTerm(term, document.id, position)
         
-        index_writer = DiskIndexWriter()
-        index_writer.writeIndex(inverted_index,Path("./postings.bin"))
+    #     index_writer = DiskIndexWriter()
+    #     index_writer.writeIndex(inverted_index,Path("./postings.bin"))
     
     def test_disk_read_index(self):
         index = DiskPositionalIndex()
-        test_postings = index.get_postings_no_pos("apple")
+        test_postings = index.get_postings_no_pos("appl")
         vocab = index.vocabulary()
-        print(vocab)
+        # print(vocab)
 
-        for p in test_postings:
-            print(p)
+        # for p in test_postings:
+            # print(p)
         
         
 unittest.main()

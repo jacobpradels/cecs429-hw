@@ -3,9 +3,10 @@ from typing import Type
 
 class Posting:
     """A Posting encapulates a document ID associated with a search query component."""
-    def __init__(self, doc_id : int, position=-1, tftd=None):
+    def __init__(self, doc_id : int, position=-1, tftd=None,wdt=None):
         self.doc_id = doc_id
         self.tftd = tftd
+        self.wdt = wdt
         if isinstance(position,int):
             self.positions = [position]
         elif isinstance(position,list):
