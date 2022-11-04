@@ -30,7 +30,6 @@ class DiskIndexWriter:
             for term in vocab:
                 # Insert into database term and hex location in index
                 cur.execute("INSERT INTO term VALUES (?,?)",[term,hex(self.byte_position)])
-                con.commit()
                 
                 # Get postings for that term
                 postings_list = index.get_postings(term)
@@ -67,7 +66,7 @@ class DiskIndexWriter:
                         self.write(file,gap_pos)
                         # print(f"pi={gap_pos}")
 
-
+        con.commit()
                     # print(posting)
         # This is just here for debugging output
         # res = cur.execute("SELECT key,byte FROM term")

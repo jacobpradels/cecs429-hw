@@ -122,8 +122,8 @@ class RankedQueryParserTests(unittest.TestCase):
     parser = RankedRetrievalParser()
     def test_parse_query(self):
         index = DiskPositionalIndex(self.processor)
-        corpus_size = 36803gi
-        in_string = "park"
+        corpus_size = 36803
+        in_string = "whiskeytown"
         test = self.parser.parse_query(in_string,self.processor, corpus_size)
         test.get_postings(index)    
 

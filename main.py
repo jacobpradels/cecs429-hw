@@ -11,6 +11,7 @@ from indexing.invertedindex import InvertedIndex
 from indexing.positionalinvertedindex import PositionalInvertedIndex
 from indexing.DiskIndexWriter import DiskIndexWriter
 from indexing.DiskPositionalIndex import DiskPositionalIndex
+from queries import RankedRetrievalParser
 from queries import *
 from porter2stemmer import Porter2Stemmer
 import time
@@ -47,18 +48,29 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
 
 def main():
     stemmer = Porter2Stemmer()
+    token_processor = BetterTokenProcessor()
+    index = None
     corpus = input("Enter corpus path: ")
     corpus_path = Path(corpus)
+    choice = eval(input("1.Build an index\n2.Query an index\n"))
     d = DirectoryCorpus.load_json_directory(corpus_path, ".json")
     if (len(d.documents()) == 0):
         d = DirectoryCorpus.load_text_directory(corpus_path, ".txt")
-    # Build the index over this directory, recording time taken.
-    start = time.time()
-    index = index_corpus(d)
-    end = time.time()
-    print("Time to index = {:.2f} seconds".format(end-start))
+    N = 0
+    if choice == 1:
+        # Build the index over this directory, recording time taken.
+        start = time.time()
+        index = index_corpus(d)
+        end = time.time()
+        print("Time to index = {:.2f} seconds".format(end-start))
+    else:
+        index = DiskPositionalIndex(token_processor)
 
-    booleanqueryparser = BooleanQueryParser()
+    mode = eval(input("1. Boolean Query Mode\n2. Ranked Retrieval Mode\n"))
+    if mode == 1:
+        queryparser = BooleanQueryParser()
+    elif mode == 2:
+        queryparser = RankedRetrievalParser.RankedRetrievalParser()
     query_string = ""
 
     while (query_string != ":q"):
@@ -91,12 +103,12 @@ def main():
         
         # Parse query
         else:
-            token_processor = BetterTokenProcessor()
-            query = booleanqueryparser.parse_query(query_string, token_processor)
+            
+            query = queryparser.parse_query(query_string, token_processor)
             postings = query.get_postings(index)
             for post in postings:
                 document = d.get_document(post.doc_id)
-                print(document)
+                print(document,post.tftd)
             print(f"{len(postings)} documents")
             chosen_document = eval(input("Enter document id to view (-1 to skip viewing) "))
             if (chosen_document != -1):

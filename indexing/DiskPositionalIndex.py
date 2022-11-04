@@ -77,6 +77,12 @@ class DiskPositionalIndex(Index):
             position = (doc_id) * 8
             value = struct.unpack(">d",weights[position:position+8])[0]
             return value
+    
+    def get_doc_count(self):
+        with open("doc_Weights.bin","rb") as weights_file:
+            weights = weights_file.read()
+            doc_count = len(weights)/8
+            return doc_count
 
     ########## INHERITED FUNCTIONS ##########
 
