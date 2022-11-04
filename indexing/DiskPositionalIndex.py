@@ -34,6 +34,8 @@ class DiskPositionalIndex(Index):
         """
         positions = []
         doc_id,offset = self.read_next(postings, offset)
+        # wdt = struct.unpack(">d",postings[offset:offset+8])[0]
+        offset = offset + 8
         tftd,offset = self.read_next(postings,offset)
         for x in range(tftd):
             next_gapped,offset = self.read_next(postings,offset)
@@ -42,7 +44,7 @@ class DiskPositionalIndex(Index):
             else:
                 positions.append(next_gapped)
 
-        return ((doc_id,positions),offset)
+        return ((doc_id,positions,tftd),offset)
     
     def get_document_no_pos(self, postings, offset):
         """
@@ -115,7 +117,8 @@ class DiskPositionalIndex(Index):
             # Process and add to dictionary
             doc_id = tftd[0][0]
             term_positions = tftd[0][1]
-            final_postings.append(Posting(doc_id + last_document,term_positions))
+            term_freq = tftd[0][2]
+            final_postings.append(Posting(doc_id + last_document,term_positions,tftd=term_freq))
             last_document = doc_id + last_document
         return final_postings
     

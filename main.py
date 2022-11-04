@@ -38,7 +38,6 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                 wdt = 1 + math.log(val)
                 total += (wdt**2)
             Ld = math.sqrt(total)
-            print(f"{d.id} - {Ld}")
             file.write(struct.pack('>d',Ld))
     
     print("Done")
@@ -63,7 +62,8 @@ def main():
     if choice == 1:
         # Build the index over this directory, recording time taken.
         start = time.time()
-        index = index_corpus(d)
+        mem_index = index_corpus(d)
+        index = DiskPositionalIndex(token_processor)
         end = time.time()
         print("Time to index = {:.2f} seconds".format(end-start))
     else:
@@ -111,7 +111,10 @@ def main():
             postings = query.get_postings(index)
             for post in postings:
                 document = d.get_document(post.doc_id)
-                print(document,post.tftd)
+                if (mode == 1):
+                    print(document)
+                elif (mode == 2):
+                    print(document," -- ",-post.tftd)
             print(f"{len(postings)} documents")
             chosen_document = eval(input("Enter document id to view (-1 to skip viewing) "))
             if (chosen_document != -1):
