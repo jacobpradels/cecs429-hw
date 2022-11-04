@@ -23,6 +23,7 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
     print("Indexing...")
     with open("doc_Weights.bin","wb") as file:
         for d in corpus:
+            total = 0
             stream = englishtokenstream.EnglishTokenStream(d.get_content())
             term_count = {}
             for position,term in enumerate(stream):
@@ -32,10 +33,12 @@ def index_corpus(corpus : DocumentCorpus) -> Index:
                         term_count[processed_term] += 1
                     except KeyError:
                         term_count[processed_term] = 1
-            total = 0
             for key,val in term_count.items():
-                total += 1 + math.log(val)**2
+                # print(f'[{key} - {val}]')
+                wdt = 1 + math.log(val)
+                total += (wdt**2)
             Ld = math.sqrt(total)
+            print(f"{d.id} - {Ld}")
             file.write(struct.pack('>d',Ld))
     
     print("Done")

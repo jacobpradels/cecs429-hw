@@ -9,6 +9,9 @@ class DiskPositionalIndex(Index):
     
     def __init__(self, processor):
         self.processor = processor
+        self.postings = None
+        with open("postings.bin","rb") as file:
+            self.postings = file.read()
     ########## HELPER FUNCTIONS ##########
 
     def read_next(self, postings, offset):
@@ -48,10 +51,12 @@ class DiskPositionalIndex(Index):
         Returns a tuple of form (doc_id,updated_offset)
         """
         doc_id,offset = self.read_next(postings,offset)
+        wdt = struct.unpack(">d",postings[offset:offset+8])[0]
+        offset = offset + 8
         tftd,offset = self.read_next(postings,offset)
         offset = self.skip(tftd,offset)
 
-        return (doc_id,offset,tftd)
+        return (doc_id,offset,tftd,wdt)
     
 
     
@@ -95,23 +100,23 @@ class DiskPositionalIndex(Index):
         position = self.get_term_position(term)
 
         # Open postings.bin
-        with open("postings.bin","rb") as postings_file:
-            postings = postings_file.read()
-            # Find how many documents to cover and update position
-            dft,position = self.read_next(postings, position)
-            # Used to remove gap
-            last_document = 0
-            for document in range(dft):
-                # Use helper function to get all positions in document
-                tftd = self.get_document(postings, position)
-                # Update the position for reading next int
-                position = tftd[1]
+        # with open("postings.bin","rb") as postings_file:
+        # postings = postings_file.read()
+        # Find how many documents to cover and update position
+        dft,position = self.read_next(self.postings, position)
+        # Used to remove gap
+        last_document = 0
+        for document in range(dft):
+            # Use helper function to get all positions in document
+            tftd = self.get_document(self.postings, position)
+            # Update the position for reading next int
+            position = tftd[1]
 
-                # Process and add to dictionary
-                doc_id = tftd[0][0]
-                term_positions = tftd[0][1]
-                final_postings.append(Posting(doc_id + last_document,term_positions))
-                last_document = doc_id + last_document
+            # Process and add to dictionary
+            doc_id = tftd[0][0]
+            term_positions = tftd[0][1]
+            final_postings.append(Posting(doc_id + last_document,term_positions))
+            last_document = doc_id + last_document
         return final_postings
     
     def get_postings_no_pos(self, term: str) -> Iterable[Posting]:
@@ -119,22 +124,23 @@ class DiskPositionalIndex(Index):
         position = self.get_term_position(term)
 
         # Open postings.bin
-        with open("postings.bin","rb") as postings_file:
-            postings = postings_file.read()
-            # Find how many documents to cover
-            dft,position = self.read_next(postings, position)
+        # with open("postings.bin","rb") as postings_file:
+        # postings = postings_file.read()
+        # Find how many documents to cover
+        dft,position = self.read_next(self.postings, position)
 
-            # Used to remove gap
-            last_document = 0
-            for document in range(dft):
-                # Use helper function to get all positions in document
-                doc_info = self.get_document_no_pos(postings, position)
-                # Update the position for reading next int
-                position = doc_info[1]
-                # Process and add to dictionary
-                doc_id = doc_info[0]
-                final_postings.append(Posting(doc_id + last_document,tftd=doc_info[2]))
-                last_document = doc_id + last_document
+        # Used to remove gap
+        last_document = 0
+        for document in range(dft):
+            # Use helper function to get all positions in document
+            doc_info = self.get_document_no_pos(self.postings, position)
+            # Update the position for reading next int
+            position = doc_info[1]
+            # Process and add to dictionary
+            doc_id = doc_info[0]
+            wdt = doc_info[3]
+            final_postings.append(Posting(doc_id + last_document,tftd=doc_info[2],wdt=wdt))
+            last_document = doc_id + last_document
         return final_postings
             
 

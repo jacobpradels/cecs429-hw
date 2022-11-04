@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 import struct
 from indexing.positionalinvertedindex import PositionalInvertedIndex
@@ -38,6 +39,7 @@ class DiskIndexWriter:
                 dft=len(postings_list)
                 self.write(file,dft)
                 # print(f"dft={dft}")
+                
 
                 # Track id and prev_id for gap
                 id = 0
@@ -54,6 +56,9 @@ class DiskIndexWriter:
 
                     # tftd = # of times term occurs in document
                     tftd = len(posting.positions)
+                    wdt = 1 + math.log(tftd)
+                    file.write(struct.pack('>d',wdt))
+                    self.byte_position += 8
                     self.write(file,tftd)
                     # print(f"tftd={tftd}")
 

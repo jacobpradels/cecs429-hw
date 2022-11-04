@@ -25,20 +25,24 @@ class RankedQuery(QueryComponent):
             dft = len(postings)
             wqt = math.log(1 + (Num/dft))
             for post in postings:
-                tftd = post.tftd
-                wdt = 1 + math.log(tftd)
+                wdt = post.wdt
+                print(f"wdt({post.doc_id}) -- {wdt}") 
                 try:
                     Ad[post.doc_id] += wdt*wqt
                 except KeyError:
                     Ad[post.doc_id] = wdt*wqt
         for key,val in Ad.items():
             Ld = index.get_doc_weight(key)
+            print(f"Ld({key} -- {Ld}")
             weight = val / Ld
             results.put((-weight,key))
         top_docs = []
-        for x in range(10):
+        count = 10
+        if results.qsize() < 10:
+            count = results.qsize()
+        for x in range(count):
+            print(results)
             doc = results.get()
-            print(doc)
             top_docs.append(Posting(doc[1],tftd=doc[0]))
 
         return top_docs
