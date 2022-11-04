@@ -74,6 +74,9 @@ def main():
         queryparser = BooleanQueryParser()
     elif mode == 2:
         queryparser = RankedRetrievalParser.RankedRetrievalParser()
+    else:
+        print('Invalid option.')
+        exit()
     query_string = ""
 
     while (query_string != ":q"):

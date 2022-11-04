@@ -26,8 +26,7 @@ class AndQuery(QueryComponent):
                 elif d2 < d1:
                     second += 1
                 elif d1 == d2:
-                    merged_positions = merge_positions(postings1[first].positions,postings2[second].positions)
-                    new_result.append(Posting(d1,merged_positions))
+                    new_result.append(Posting(d1))
                     first += 1
                     second += 1
             result[0:2] = [new_result]
@@ -37,40 +36,3 @@ class AndQuery(QueryComponent):
     def __str__(self):
         return " AND ".join(map(str, self.components))
 
-# def merge_positions(pos1, pos2):
-#     out = []
-#     first = 0
-#     second = 0
-#     while first < len(pos1) and second < len(pos2):
-#         if pos1[first] < pos2[second]:
-#             out.append(pos1[first])
-#             first += 1
-#         elif pos1[first] > pos2[second]:
-#             out.append(pos2[second])
-#             second += 1
-#         else:
-#             out.append(pos1[first])
-#             first += 1
-#             second += 1
-#     return out
-
-def merge_positions(pos1, pos2):
-    out = []
-    first = 0
-    second = 0
-    while first < len(pos1) and second < len(pos2):
-        if pos1[first] < pos2[second]:
-            out.append(pos1[first])
-            first += 1
-        elif pos1[first] > pos2[second]:
-            out.append(pos2[second])
-            second += 1
-        else:
-            out.append(pos1[first])
-            first += 1
-            second += 1
-    if (first >= len(pos1)):
-        out = out + pos2[second:]
-    elif (second >= len(pos2)):
-        out = out + pos1[first:]
-    return out

@@ -12,7 +12,7 @@ class TermLiteral(QueryComponent):
         self.term = self.processor.process_token_keep_hyphen(term)
 
     def get_postings(self, index) -> list[Posting]:
-        return index.get_postings(self.term)
+        return index.get_postings_no_pos(self.term)
 
     def __str__(self) -> str:
         return self.term
