@@ -1,3 +1,4 @@
+from collections import defaultdict
 import math
 from indexing.postings import Posting
 from .querycomponent import QueryComponent
@@ -17,7 +18,7 @@ class RankedQuery(QueryComponent):
     def get_postings(self, index) -> list[Posting]:
         terms = self.term.split(" ")
         [self.processor.process_token_keep_hyphen(x) for x in terms]
-        Ad = {}
+        Ad = defaultdict(int)
         Num = index.get_doc_count()
         results = PriorityQueue()
         for term in terms:
@@ -26,10 +27,7 @@ class RankedQuery(QueryComponent):
             wqt = math.log(1 + (Num/dft))
             for post in postings:
                 wdt = post.wdt
-                try:
-                    Ad[post.doc_id] += wdt*wqt
-                except KeyError:
-                    Ad[post.doc_id] = wdt*wqt
+                Ad[post.doc_id] += wdt*wqt
         for key,val in Ad.items():
             Ld = index.get_doc_weight(key)
             weight = val / Ld
@@ -40,7 +38,7 @@ class RankedQuery(QueryComponent):
             count = results.qsize()
         for x in range(count):
             doc = results.get()
-            top_docs.append(Posting(doc[1],tftd=doc[0]))
+            top_docs.append(Posting(doc[1],score=doc[0]))
 
         return top_docs
 

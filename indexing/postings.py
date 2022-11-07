@@ -3,10 +3,11 @@ from typing import Type
 
 class Posting:
     """A Posting encapulates a document ID associated with a search query component."""
-    def __init__(self, doc_id : int, position=-1, tftd=None,wdt=None):
+    def __init__(self, doc_id : int, position=-1, tftd=None,wdt=None,score=None):
         self.doc_id = doc_id
         self.tftd = tftd
         self.wdt = wdt
+        self.score = score
         if isinstance(position,int):
             self.positions = [position]
         elif isinstance(position,list):
@@ -27,3 +28,6 @@ class Posting:
             return f"({self.doc_id} : {self.positions})"
         else:
             return f"({self.doc_id} : tftd: {self.tftd})"
+    
+    def __hash__(self):
+        return hash(self.doc_id)

@@ -117,7 +117,7 @@ def main():
                 if (mode == 1):
                     print(document)
                 elif (mode == 2):
-                    print(document," -- ",-post.tftd)
+                    print(document," -- ",-post.score)
             print(f"{len(postings)} documents")
             chosen_document = eval(input("Enter document id to view (-1 to skip viewing) "))
             if (chosen_document != -1):
