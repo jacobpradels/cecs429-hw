@@ -14,6 +14,9 @@ from indexing.DiskPositionalIndex import DiskPositionalIndex
 from queries import RankedRetrievalParser
 from queries import *
 from porter2stemmer import Porter2Stemmer
+from matplotlib import pyplot as plt
+from fractions import Fraction
+import numpy as np
 import time
 
 
@@ -106,10 +109,122 @@ def main():
             for word in index.vocabulary()[:1001]:
                 print(word)
             print(f"Vocabulary has {len(index.vocabulary())} words")
-        
-        # Parse query
-        else:
+        elif (query_string ==  ":map"):
+            if (mode == 1):
+                print("Map only available in ranked retrieval mode.")
+                continue
+            start = time.time()
+            listOfQueries = []
+            listOfRelevant = []
+            queryText = ""
+            relevantDocuments = []
+            with open("relevant/relevance/queries","r") as queries:
+                listOfQueries = queries.readlines()
+            with open("relevant/relevance/qrel","r") as qrel:
+                listOfRelevant = qrel.readlines()
             
+            listOfQueries = [x.strip() for x in listOfQueries]
+            AveragePrecisionAccumulator = 0
+            for queryText,relevantDocuments in zip(listOfQueries,listOfRelevant):
+                relevantDocuments = relevantDocuments.split()
+                relevantDocuments = [eval(x) for x in relevantDocuments]
+                query = queryparser.parse_query(queryText, token_processor)
+                postings = query.get_postings(index)
+                relCount = 0
+                PrecisionAccumulator = 0
+                for i,post in enumerate(postings):
+                    doc = d.get_document(post.doc_id)
+                    # print(doc.path)
+                    # docNumber = eval(str(doc.path)[9:-5])
+                    if doc.id in relevantDocuments:
+                        # print("rel:",doc.id)
+                        relCount += 1
+                        PrecisionAccumulator += relCount / (i + 1)
+                    # else:
+                        # print("nr",docNumber)
+                try:
+                    AP = PrecisionAccumulator/relCount
+                except ZeroDivisionError:
+                    AP = 0
+                AveragePrecisionAccumulator += AP
+            end = time.time()
+            MAP = AveragePrecisionAccumulator / len(listOfQueries)
+            throughput = len(listOfQueries)/(end - start)
+            responseTime = (end-start)/len(listOfQueries)
+            out = [
+                ["Throughput",throughput,"queries/second"],
+                ["Response Time",responseTime,"seconds"],
+                ["MAP",MAP,""]
+            ]
+            for line in out:
+                print("{0:<15} {1:<8.4f} {2:<8}".format(*line))
+        elif (query_string == ":thr"):
+            if (mode == 1):
+                print("Map only available in ranked retrieval mode.")
+                continue
+            start = time.time()
+            for x in range(1):
+                queryText = ""
+                relevantDocuments = []
+                with open("relevant/relevance/queries","r") as queries:
+                    queryText = queries.readlines()[0]
+                with open("relevant/relevance/qrel","r") as qrel:
+                    relevantDocuments = qrel.readlines()[1]
+                
+                query = queryparser.parse_query(queryText, token_processor)
+                postings = query.get_postings(index)
+                PrecisionAccumulator = 0
+                relCount = 0
+                for i,post in enumerate(postings):
+                        doc = d.get_document(post.doc_id)
+                        # print(doc.path)
+                        # docNumber = eval(str(doc.path)[9:-5])
+                        if str(doc.id) in relevantDocuments:
+                            print("{} - {:.4f} {}".format(doc,-post.score,"Relevant"))
+                            # print(doc," -- ",-post.score,"Relevant")
+                            relCount += 1
+                            PrecisionAccumulator += relCount / (i + 1)
+                        else:
+                            print("{} - {:.4f} {}".format(doc,-post.score,"Not relevant"))
+                            # print(doc," -- ",-post.score,"Not relevant")
+                try:
+                    AP = PrecisionAccumulator/relCount
+                except ZeroDivisionError:
+                    AP = 0
+                # print(len(postings))
+                # print(AP)
+            end = time.time()
+            duration = end - start
+            throughput = 30/duration
+            print(throughput)
+        elif (query_string == ":graph"):
+            queryText = ""
+            relevantDocuments = []
+            with open("relevant/relevance/queries","r") as queries:
+                queryText = queries.readlines()[0]
+            with open("relevant/relevance/qrel","r") as qrel:
+                relevantDocuments = qrel.readlines()[1]
+            
+            query = queryparser.parse_query(queryText, token_processor)
+            postings = query.get_postings(index)
+            PrecisionAccumulator = 0
+            prec_count = 0
+            precision = []
+            recall = []
+            for i,post in enumerate(postings):
+                doc = d.get_document(post.doc_id)
+                if str(doc.id) in relevantDocuments:
+                    prec_count += 1
+                precision.append(prec_count/(i + 1))
+                recall.append(prec_count/len(relevantDocuments))
+            precision_frac = [Fraction(x).limit_denominator() for x in precision]
+            plt.plot(recall,precision)
+            plt.xlabel("Recall")
+            plt.ylabel("Precision")
+            plt.show()
+
+        else:
+            # Parse query
             query = queryparser.parse_query(query_string, token_processor)
             postings = query.get_postings(index)
             for post in postings:

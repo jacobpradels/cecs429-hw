@@ -67,13 +67,16 @@ class DiskPositionalIndex(Index):
         Get the position a term starts in postings.bin from the
         term_positions database.
         """
-        term = self.processor.process_token_keep_hyphen(term)
+        # term = self.processor.process_token_keep_hyphen(term)
         # Connect to the database
         con = sqlite3.connect("term_positions.db")
         cur = con.cursor()
         # Query database for location of term in postings.bin
         res = cur.execute("SELECT key,byte FROM term WHERE key=?",[term])
-        position = res.fetchone()[1]
+        try:
+            position = res.fetchone()[1]
+        except TypeError:
+            return -1
         # Convert position to decimal
         position = int(position[2:],16)
         return position
@@ -100,6 +103,8 @@ class DiskPositionalIndex(Index):
     def get_postings(self, term : str) -> Iterable[Posting]:
         final_postings = []
         position = self.get_term_position(term)
+        if (position == -1):
+            return []
 
         # Open postings.bin
         # with open("postings.bin","rb") as postings_file:
@@ -125,6 +130,8 @@ class DiskPositionalIndex(Index):
     def get_postings_no_pos(self, term: str) -> Iterable[Posting]:
         final_postings = []
         position = self.get_term_position(term)
+        if (position == -1):
+            return []
 
         # Open postings.bin
         # with open("postings.bin","rb") as postings_file:

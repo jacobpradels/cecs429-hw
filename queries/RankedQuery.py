@@ -13,18 +13,25 @@ class RankedQuery(QueryComponent):
 
     def __init__(self, term : str, processor : TokenProcessor):
         self.processor = processor
-        self.term = self.processor.process_token_keep_hyphen(term)
-
+        self.term = term
     def get_postings(self, index) -> list[Posting]:
-        terms = self.term.split(" ")
-        [self.processor.process_token_keep_hyphen(x) for x in terms]
+        threshhold = 1.75
+        old_terms = self.term.split(" ")        
+        terms = [self.processor.process_token_keep_hyphen(x) for x in old_terms]
         Ad = defaultdict(int)
         Num = index.get_doc_count()
         results = PriorityQueue()
         for term in terms:
             postings = index.get_postings_no_pos(term)
             dft = len(postings)
-            wqt = math.log(1 + (Num/dft))
+            if dft > 0:
+                wqt = math.log(1 + (Num/dft))
+            else:
+                wqt = 0
+            # print(wqt)
+            # print("{:.2f}".format(wqt),end=" ")
+            if wqt < threshhold:
+                continue
             for post in postings:
                 wdt = post.wdt
                 Ad[post.doc_id] += wdt*wqt
@@ -33,8 +40,8 @@ class RankedQuery(QueryComponent):
             weight = val / Ld
             results.put((-weight,key))
         top_docs = []
-        count = 10
-        if results.qsize() < 10:
+        count = 50
+        if results.qsize() < count:
             count = results.qsize()
         for x in range(count):
             doc = results.get()

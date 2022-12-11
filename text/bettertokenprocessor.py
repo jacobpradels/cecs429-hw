@@ -45,6 +45,7 @@ class BetterTokenProcessor(TokenProcessor):
         seperate_tokens = []
         if ("-" in token):
             seperate_tokens = token.split("-")
+            seperate_tokens.append(token)
         return [full_token] + seperate_tokens
 
     def process_token(self, token : str) -> Iterator[str]:

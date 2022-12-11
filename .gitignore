@@ -3,3 +3,5 @@ test_nps/*
 __pycache__/
 .pyc
 *.pyc
+relevant/
+relevant-parks/
